@@ -1,24 +1,24 @@
 import express from "express";
 import conectaNaDatabase from "./config/dbConnect.js";
 import routes from "./routes/index.js";
+import manipuladorDeErros from "./middlewares/manipuladorDeErros.js";
+import manipulador404 from "./middlewares/manipulador404.js";
 
 const conexao = await conectaNaDatabase();
 
-conexao.on("error", (erro) => {
-    console.error("erro de conexao.", erro);
-});
+conexao.on("error", console.log.bind(console, "Erro de conexão"));
 
 conexao.once("open", () => {
-    console.log("conexao com o banco feita com sucesso.");
+  console.log("conexão com o banco feita com sucesso");
 });
 
 const app = express();
+app.use(express.json());
 routes(app);
 
-app.delete("/livros/:id", (req, res) => {
-    const index = buscaLivro(req.params.id);
-    livros.splice(index, 1);
-    res.status(200).send("Livro removido com sucesso.");
-});
+app.use(manipulador404);
+
+// eslint-disable-next-line no-unused-vars
+app.use(manipuladorDeErros);
 
 export default app;

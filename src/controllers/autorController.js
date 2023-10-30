@@ -1,55 +1,72 @@
-import { autor } from "../models/Autor.js";
+import NaoEncontrado from "../erros/NaoEncontrado.js";
+import autor from "../models/Autor.js";
 
 class autorController {
 
-    static async listarAutor (req, res) {
-        try {
-            const listaAutor = await autor.find({});
-            res.status(200).json(listaAutor);
-        } catch (erro) {
-            res.status(500).json({ message: `${erro.message} - falha na requisição` });
-        }
-    };
+  static listarAutor = async (req, res) => {
+    try {
+      const autorResultado = await autor.find();
+      res.status(200).json(autorResultado);
+    } catch (erro){
+      res.status(500).json({ message: "Erro interno no servidor" });
+    }
+  };
 
-    static async cadastrarAutor (req, res) {
-        try {
-            const novoAutor = await autor.create(req.body);
-            res.status(201).json({ message: "Criado com sucesso", autor: novoAutor });
-        } catch (erro){
-            res.status(500).json({ message: `${erro.message} - falha ao cadastrar autor` });
-        }
-    };
+  static cadastrarAutor = async (req, res, next) => {
+    try {
+      let novoAutor = new autor(req.body);
+      const autorResultado = await novoAutor.save();
+      res.status(201).send(autorResultado.toJSON());
+    } catch (erro) {
+      console.log(erro);
+      next(erro);
+    }
+  };
 
-    static async listarAutorPorId (req, res) {
-        try {
-            const id = req.params.id;
-            const autorEncontrado = await autor.findById(id);
-            res.status(200).json(autorEncontrado);
-        } catch (erro) {
-            res.status(500).json({ message: `${erro.message} - falha na requisição do autor` });
-        }
-    };
+  static listarAutorPorId = async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      const autorEncontrado = await autor.findById(id);
 
-    static async atualizarAutor (req, res) {
-        try {
-            const id = req.params.id;
-            await autor.findByIdAndUpdate(id, req.body);
-            res.status(200).json({ message: "autor atualizado." });
-        } catch (erro) {
-            res.status(500).json({ message: `${erro.message} - falha na atualização do autor` });
-        }
-    };
+      if(autorEncontrado !== null){
+        res.status(200).send(autorEncontrado);
+      } else {
+        next(new NaoEncontrado("Id do Autor não localizado."));
+      }
+    } catch (erro) {
+      next(erro);
+    }
 
-    static async excluirAutor (req, res) {
-        try {
-            const id = req.params.id;
-            await autor.findByIdAndDelete(id);
-            res.status(200).json({ message: "autor excluído com sucesso." });
-        } catch (erro) {
-            res.status(500).json({ message: `${erro.message} - falha na exclusão do livro` });
-        }
-    };
+  };
 
-};
+  static atualizarAutor = async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      const autorResultado = await autor.findByIdAndUpdate(id, {$set: req.body});
+      if(autorResultado !== null){
+        res.status(200).send({message: "Autor atualizado com sucesso"});
+      } else {
+        next(new NaoEncontrado("Id do Autor não localizado."));
+      }
+    } catch (erro) {
+      next(erro);
+    }
+  };
+
+  static excluirAutor = async (req, res, next) => { 
+    try {
+      const id = req.params.id;
+      const autorResultado = await autor.findByIdAndDelete(id);
+
+      if(autorResultado !== null){
+        res.status(200).send({message: "Autor removido com sucesso"});
+      } else {
+        next(new NaoEncontrado("Id do Autor não localizado."));
+      }
+    } catch (erro) {
+      next(erro);
+    }
+  };
+}
 
 export default autorController;

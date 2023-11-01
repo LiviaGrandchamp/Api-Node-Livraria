@@ -1,12 +1,13 @@
 import NaoEncontrado from "../erros/NaoEncontrado.js";
-import autor from "../models/Autor.js";
+import { autores } from "../models/index.js";
 
-class autorController {
+class autorController { 
 
-  static listarAutor = async (req, res) => {
+  static listarAutor = async (req, res, next) => {
     try {
-      const autorResultado = await autor.find();
-      res.status(200).json(autorResultado);
+      const autorResultado = autores.find();
+      req.resultado = autorResultado;
+      next();
     } catch (erro){
       res.status(500).json({ message: "Erro interno no servidor" });
     }
@@ -14,11 +15,10 @@ class autorController {
 
   static cadastrarAutor = async (req, res, next) => {
     try {
-      let novoAutor = new autor(req.body);
+      let novoAutor = new autores(req.body);
       const autorResultado = await novoAutor.save();
       res.status(201).send(autorResultado.toJSON());
     } catch (erro) {
-      console.log(erro);
       next(erro);
     }
   };
@@ -26,7 +26,7 @@ class autorController {
   static listarAutorPorId = async (req, res, next) => {
     try {
       const id = req.params.id;
-      const autorEncontrado = await autor.findById(id);
+      const autorEncontrado = await autores.findById(id);
 
       if(autorEncontrado !== null){
         res.status(200).send(autorEncontrado);
@@ -42,7 +42,7 @@ class autorController {
   static atualizarAutor = async (req, res, next) => {
     try {
       const id = req.params.id;
-      const autorResultado = await autor.findByIdAndUpdate(id, {$set: req.body});
+      const autorResultado = await autores.findByIdAndUpdate(id, {$set: req.body});
       if(autorResultado !== null){
         res.status(200).send({message: "Autor atualizado com sucesso"});
       } else {
@@ -56,7 +56,7 @@ class autorController {
   static excluirAutor = async (req, res, next) => { 
     try {
       const id = req.params.id;
-      const autorResultado = await autor.findByIdAndDelete(id);
+      const autorResultado = await autores.findByIdAndDelete(id);
 
       if(autorResultado !== null){
         res.status(200).send({message: "Autor removido com sucesso"});
